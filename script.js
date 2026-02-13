@@ -1,8 +1,9 @@
-// Typing effect
-function typeMessage(element, text, delay = 0, speed = 50) {
-    let i = 0;
+// Typing effect — slow, love-letter style
+function typeMessage(element, text, delay = 0, speed = 120) {
+    element.innerHTML = "";
     element.style.opacity = 1;
     setTimeout(() => {
+        let i = 0;
         const interval = setInterval(() => {
             element.innerHTML += text[i];
             i++;
@@ -43,21 +44,17 @@ window.addEventListener("load", () => {
     }
 });
 
-// Typing sequence
+// Typing sequence — bottom-up
 function startTypingSequence() {
-    let delay = 1000;
-    typeMessage(title, title.innerText, delay, 60);
-    delay += title.innerText.length * 60 + 500;
+    let delay = 500;
+    const allMessages = [...messages, signature, easterEgg];
 
-    messages.forEach(msg => {
-        const text = msg.innerText;
-        msg.innerHTML = "";
-        typeMessage(msg, text, delay, 50);
-        delay += text.length * 50 + 600;
+    allMessages.forEach(msg => {
+        typeMessage(msg, msg.innerText, delay, 120);
+        delay += msg.innerText.length * 120 + 1000;
     });
 
     setTimeout(() => gsap.to(buttons, {opacity:1, duration:1.5}), delay);
-    setTimeout(() => gsap.to(signature, {opacity:1, duration:1.5}), delay + 1000);
 }
 
 // Floating hearts
@@ -76,17 +73,17 @@ function createHeart() {
 setInterval(createHeart, 500);
 
 // Button interactions
-document.getElementById("yesBtn").addEventListener("click", function () {
+document.getElementById("yesBtn").addEventListener("click", () => {
     alert("Then let’s begin something beautiful ❤️");
     gsap.fromTo(easterEgg, {opacity:0, y:10}, {opacity:1, y:0, duration:1.5});
 });
 
-document.getElementById("waitBtn").addEventListener("click", function () {
+document.getElementById("waitBtn").addEventListener("click", () => {
     alert("Take your time… I’ll be here, patiently.");
 });
 
 // -----------------------------
-// Sparkle Particles
+// Sparkle particles
 // -----------------------------
 let sparkles = [];
 function Sparkle(x, y) {
@@ -122,10 +119,5 @@ function animateSparkles() {
 }
 animateSparkles();
 
-// Create sparkles on click/tap
-window.addEventListener("pointermove", function(e){
-    sparkles.push(new Sparkle(e.clientX, e.clientY));
-});
-window.addEventListener("click", function(e){
-    sparkles.push(new Sparkle(e.clientX, e.clientY));
-});
+window.addEventListener("pointermove", (e) => sparkles.push(new Sparkle(e.clientX, e.clientY)));
+window.addEventListener("click", (e) => sparkles.push(new Sparkle(e.clientX, e.clientY)));
