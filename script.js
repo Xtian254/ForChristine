@@ -1,164 +1,131 @@
-body {
-    margin: 0;
-    padding: 0;
-    background: #0f0f0f;
-    font-family: 'Playfair Display', serif;
-    color: #f5f5f5;
-    overflow-x: hidden;
-    overflow-y: hidden;
+// Typing effect
+function typeMessage(element, text, delay = 0, speed = 50) {
+    let i = 0;
+    element.style.opacity = 1;
+    setTimeout(() => {
+        const interval = setInterval(() => {
+            element.innerHTML += text[i];
+            i++;
+            if (i >= text.length) clearInterval(interval);
+        }, speed);
+    }, delay);
 }
 
-/* Blurred Background with subtle zoom */
-.background-image {
-    position: fixed;
-    width: 110%;
-    height: 110%;
-    background: url("IMG-20250920-WA0011.jpeg") center/cover no-repeat;
-    filter: blur(6px) brightness(45%);
-    z-index: 0;
-    animation: zoomBg 50s linear infinite alternate;
+// Elements
+const messages = document.querySelectorAll(".message");
+const title = document.querySelector(".title");
+const signature = document.querySelector(".signature");
+const buttons = document.querySelector(".buttons");
+const easterEgg = document.getElementById("easterEgg");
+const overlay = document.getElementById("startOverlay");
+const music = document.getElementById("bgMusic");
+const canvas = document.getElementById("sparkles");
+const ctx = canvas.getContext("2d");
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+// Autoplay music
+window.addEventListener("load", () => {
+    music.volume = 0.5;
+    const playPromise = music.play();
+
+    if (playPromise !== undefined) {
+        playPromise.catch(() => {
+            overlay.style.display = "flex";
+            overlay.addEventListener("click", () => {
+                music.play();
+                overlay.style.display = "none";
+                startTypingSequence();
+            }, {once:true});
+        }).then(() => startTypingSequence());
+    } else {
+        startTypingSequence();
+    }
+});
+
+// Typing sequence
+function startTypingSequence() {
+    let delay = 1000;
+    typeMessage(title, title.innerText, delay, 60);
+    delay += title.innerText.length * 60 + 500;
+
+    messages.forEach(msg => {
+        const text = msg.innerText;
+        msg.innerHTML = "";
+        typeMessage(msg, text, delay, 50);
+        delay += text.length * 50 + 600;
+    });
+
+    setTimeout(() => gsap.to(buttons, {opacity:1, duration:1.5}), delay);
+    setTimeout(() => gsap.to(signature, {opacity:1, duration:1.5}), delay + 1000);
 }
 
-@keyframes zoomBg {
-    0% { transform: scale(1); }
-    100% { transform: scale(1.05); }
+// Floating hearts
+const heartsContainer = document.querySelector(".hearts");
+function createHeart() {
+    const heart = document.createElement("div");
+    heart.classList.add("heart");
+    heart.innerHTML = "❤️";
+    heart.style.left = Math.random() * 100 + "vw";
+    heart.style.fontSize = Math.random() * 20 + 12 + "px";
+    heart.style.animationDuration = Math.random() * 3 + 4 + "s";
+    heart.style.opacity = Math.random() * 0.5 + 0.5;
+    heartsContainer.appendChild(heart);
+    setTimeout(() => heart.remove(), 7000);
+}
+setInterval(createHeart, 500);
+
+// Button interactions
+document.getElementById("yesBtn").addEventListener("click", function () {
+    alert("Then let’s begin something beautiful ❤️");
+    gsap.fromTo(easterEgg, {opacity:0, y:10}, {opacity:1, y:0, duration:1.5});
+});
+
+document.getElementById("waitBtn").addEventListener("click", function () {
+    alert("Take your time… I’ll be here, patiently.");
+});
+
+// -----------------------------
+// Sparkle Particles
+// -----------------------------
+let sparkles = [];
+function Sparkle(x, y) {
+    this.x = x;
+    this.y = y;
+    this.size = Math.random() * 4 + 2;
+    this.speedX = (Math.random() - 0.5) * 2;
+    this.speedY = (Math.random() - 1.5) * 2;
+    this.opacity = 1;
 }
 
-.container {
-    position: relative;
-    z-index: 2;
-    max-width: 90%;
-    margin: auto;
-    top: 50%;
-    transform: translateY(-50%);
-    text-align: center;
-    padding: 15px;
-    line-height: 1.6;
-}
+Sparkle.prototype.update = function() {
+    this.x += this.speedX;
+    this.y += this.speedY;
+    this.opacity -= 0.02;
+};
 
-.title {
-    font-size: 2.2em;
-    margin-bottom: 25px;
-    opacity: 0;
-}
+Sparkle.prototype.draw = function() {
+    ctx.fillStyle = "rgba(255,255,255," + this.opacity + ")";
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.size, 0, Math.PI*2);
+    ctx.fill();
+};
 
-.shimmer {
-    display: inline-block;
-    background: linear-gradient(90deg, #fff, #ff4d6d, #fff);
-    background-size: 200% 100%;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    animation: shimmer 3s infinite;
+function animateSparkles() {
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    for(let i=0;i<sparkles.length;i++){
+        sparkles[i].update();
+        sparkles[i].draw();
+        if(sparkles[i].opacity<=0) sparkles.splice(i,1);
+    }
+    requestAnimationFrame(animateSparkles);
 }
+animateSparkles();
 
-@keyframes shimmer {
-    0% { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
-}
-
-.message {
-    font-size: 1.1em;
-    margin: 20px 0;
-    opacity: 0;
-}
-
-.closing {
-    font-weight: bold;
-    font-size: 1.2em;
-    margin-top: 25px;
-}
-
-.signature {
-    margin-top: 30px;
-    font-style: italic;
-    opacity: 0;
-}
-
-.buttons {
-    margin-top: 30px;
-    opacity: 0;
-}
-
-button {
-    padding: 12px 30px;
-    margin: 12px;
-    border-radius: 30px;
-    border: 1px solid #fff;
-    background: transparent;
-    color: white;
-    cursor: pointer;
-    transition: 0.3s ease;
-    font-size: 1em;
-}
-
-button:hover {
-    background: white;
-    color: black;
-    transform: scale(1.05);
-}
-
-/* Floating Hearts */
-.hearts {
-    position: fixed;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    z-index: 1;
-}
-
-.heart {
-    position: absolute;
-    color: #ff4d6d;
-    opacity: 0.8;
-    animation: floatUp linear infinite;
-}
-
-@keyframes floatUp {
-    from { transform: translateY(100vh); opacity: 0.8; }
-    to { transform: translateY(-10vh); opacity: 0; }
-}
-
-/* Sparkle Canvas */
-#sparkles {
-    position: fixed;
-    top:0;
-    left:0;
-    width:100%;
-    height:100%;
-    pointer-events: none;
-    z-index:3;
-}
-
-/* Easter Egg */
-.easter-egg {
-    font-size: 1em;
-    font-style: italic;
-    opacity: 0;
-    margin-top: 15px;
-    transform: translateY(10px);
-}
-
-/* Tap overlay for autoplay fallback */
-#startOverlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(15,15,15,0.95);
-    color: white;
-    font-size: 1.4em;
-    display: none;
-    justify-content: center;
-    align-items: center;
-    z-index: 5;
-    text-align: center;
-    cursor: pointer;
-}
-
-/* Responsive adjustments */
-@media (max-width: 500px) {
-    .title { font-size: 1.8em; }
-    .message { font-size: 1em; }
-    button { padding: 10px 25px; font-size: 0.95em; }
-}
+// Create sparkles on click/tap
+window.addEventListener("pointermove", function(e){
+    sparkles.push(new Sparkle(e.clientX, e.clientY));
+});
+window.addEventListener("click", function(e){
+    sparkles.push(new Sparkle(e.clientX, e.clientY));
+});
